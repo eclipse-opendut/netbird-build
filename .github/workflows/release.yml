@@ -93,6 +93,9 @@ jobs:
       - name: Install modules
         run: go mod tidy
 
+      - name: Install OS build dependencies
+        run: sudo apt update && sudo apt install -y -q gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
+
       - name: Set custom git tag - the custom NetBird release version
         run: |
           git tag ${{ env.netbird_version }}-${{ env.netbird_ref }}
@@ -111,3 +114,8 @@ jobs:
           name: release
           path: dist/
           retention-days: 3
+
+      - uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5  # v1.14.0
+        name: "Create release"
+        with:
+          artifacts: "dist/netbird*.tar.gz"
