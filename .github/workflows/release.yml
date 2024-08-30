@@ -119,3 +119,4 @@ jobs:
         name: "Create release"
         with:
           artifacts: "dist/netbird*.tar.gz"
+          tag: "${{ env.netbird_version }}-${{ env.netbird_ref }}"
