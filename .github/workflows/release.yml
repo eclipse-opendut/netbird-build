@@ -31,14 +31,14 @@ jobs:
       - name: Checkout sources
         uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b #4.1.5
         with:
-          repository: '{{ env.netbird_repository }}'
-          ref: '{{ env.netbird_ref }}'
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       # Steps taken from: .github/workflows/golang-test-linux.yml
       - name: Install Go
         uses: actions/setup-go@v4
         with:
-          go-version: "{{ env.go_version }}"
+          go-version: "${{ env.go_version }}"
 
       - name: Cache Go modules
         uses: actions/cache@v3
@@ -66,18 +66,18 @@ jobs:
 
   release:
     runs-on: ubuntu-latest
-
+    needs: [ "test" ]
     steps:
       - name: Checkout sources
         uses: actions/checkout@44c2b7a8a4ea60a981eaca3cf939b5f4305c123b #4.1.5
         with:
-          repository: '{{ env.netbird_repository }}'
-          ref: '{{ env.netbird_ref }}'
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       - name: Install Go
         uses: actions/setup-go@v4
         with:
-          go-version: "{{ env.go_version }}"
+          go-version: "${{ env.go_version }}"
           cache: false
 
       - name: Cache Go modules
@@ -95,7 +95,7 @@ jobs:
 
       - name: Set custom git tag - the custom NetBird release version
         run: |
-          git tag {{ env.netbird_version }}-{{ env.netbird_ref }}
+          git tag ${{ env.netbird_version }}-${{ env.netbird_ref }}
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
