@@ -1,2 +1,3 @@
 # netbird-build
-Build Netbird for multiple architectures.
+
+Build NetBird **client** for multiple architectures.
