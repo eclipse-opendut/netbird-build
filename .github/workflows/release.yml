@@ -9,7 +9,7 @@ concurrency:
 
 env:
   netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "5619306f5c4f40e7f19f64c5bcbf81cd87cff7c2"
+  netbird_ref: "b3d044d5559a735030e12dd1ec4891a65d5006e3"
   netbird_version: "v0.28.9"  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
 
   go_version: "1.21.x"
@@ -120,5 +120,5 @@ jobs:
       - uses: ncipollo/release-action@2c591bcc8ecdcd2db72b97d6147f871fcd833ba5  # v1.14.0
         name: "Create release"
         with:
-          artifacts: "dist/netbird*.tar.gz"
+          artifacts: "dist/netbird*.tar.gz,client/proto/daemon.proto"
           tag: "${{ env.netbird_version }}-${{ env.netbird_ref }}"
