@@ -9,7 +9,7 @@ concurrency:
 
 env:
   netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "b3d044d5559a735030e12dd1ec4891a65d5006e3"
+  netbird_ref: "a2f1d0dd1405c1c219454b0c74bd6fdf19297205"
   netbird_version: "v0.28.9"  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
 
   go_version: "1.21.x"
