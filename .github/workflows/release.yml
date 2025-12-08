@@ -12,7 +12,7 @@ env:
   netbird_ref: "131136439764a67187b7fbfadef1215b5cc66780"
   netbird_version: "v0.60.2"  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
 
-  GORELEASER_VER: "v1.14.1"
+  GORELEASER_VER: "v2.3.2"
   # do not publish artifacts since this requires secrets of the respective targets
   GORELEASER_FLAGS: "--skip=docker --skip=publish"
 
