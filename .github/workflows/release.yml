@@ -21,7 +21,7 @@ env:
 jobs:
   # compare with https://github.com/netbirdio/netbird/blob/3f4f825ec14c45dd149a743eb80e98e7bb5e9ec5/.github/workflows/golang-test-linux.yml
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         arch: [ '386','amd64' ]
