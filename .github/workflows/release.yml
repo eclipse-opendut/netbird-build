@@ -9,9 +9,9 @@ concurrency:
 
 env:
   netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "59ad6325e348aa1f9e1098fed1a4d45eaeadffc7"
+  netbird_ref: "33554ade85cfdf3d80f0fa155b4f32d761f0d615"
   # netbird tag from the forked repository
-  netbird_version: "v0.64.5"  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
+  netbird_version: "v0.65.3"  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
 
   GORELEASER_VER: "v2.3.2"
   # do not publish artifacts since this requires secrets of the respective targets
