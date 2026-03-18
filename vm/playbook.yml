@@ -1,0 +1,70 @@
+#!/usr/bin/env ansible-playbook
+---
+- name: playbook
+  hosts: all
+  become: true
+  vars:
+    golang_version: '1.25.5'  # compare with version NetBird repository: `grep -Eo "^go [0-9]+.[0-9]+.*" go.mod`
+    golang_mirror: 'https://go.dev/dl'
+    # use script in role directory to determine checksum if missing: https://github.com/gantsign/ansible-role-golang/blob/master/add_new_versions.py
+    golang_redis_sha256sum: '9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b'
+
+    # Check in NetBird repository with the following command: 'grep -E '//\s+protoc\s+' client/proto/daemon.pb.go'
+    # version scheme documented here: https://protobuf.dev/support/version-support
+    # v6.33.1 -> protobuf version 33.1
+    # Lookup version here: https://github.com/protocolbuffers/protobuf/releases/tag/v33.1
+    protoc_version: "33.1"
+    protoc_checksum: "sha256:f3340e28a83d1c637d8bafdeed92b9f7db6a384c26bca880a6e5217b40a4328b"
+
+  pre_tasks:
+  - name: Change default shell for vagrant user to bash
+    ansible.builtin.user:
+      name: vagrant
+      shell: /bin/bash
+
+  - name: Install required packages
+    apt:
+      # see https://github.com/netbirdio/netbird/blob/main/.github/workflows/golang-test-linux.yml
+      # sudo apt install -y -q libgtk-3-dev libayatana-appindicator3-dev libgl1-mesa-dev xorg-dev gcc-multilib libpcap-dev
+      pkg: ['libgtk-3-dev', 'libayatana-appindicator3-dev', 'libgl1-mesa-dev', 'xorg-dev', 'gcc-multilib', 'protobuf-compiler', 'htop', 'tmux', 'unzip']
+      state: 'present'
+      update_cache: yes
+      cache_valid_time: 3600
+    # 'gccgo-aarch64-linux-gnu', 'gccgo-arm-linux-gnueabihf', 'gccgo-arm-linux-gnueabi'
+
+  - name: Include go binary installation directory in PATH
+    become: true
+    become_user: vagrant
+    ansible.builtin.lineinfile:
+      path: /home/vagrant/.bashrc
+      regexp: '^export PATH=~/go/bin/'
+      line: "export PATH=~/go/bin/:$PATH"
+
+  - name: Protobuf compile
+    block:
+    - name: Create target directory
+      ansible.builtin.file:
+        path: "/opt/protoc-{{ protoc_version }}"
+        state: directory
+        owner: vagrant
+        group: vagrant
+        mode: '0755'
+    - name: Install protobuf compilers in known version
+      ansible.builtin.get_url:
+        url: "https://github.com/protocolbuffers/protobuf/releases/download/v{{ protoc_version }}/protoc-{{ protoc_version }}-linux-x86_64.zip"
+        dest: /opt/protoc-{{ protoc_version }}-linux-x86_64.zip
+        checksum: "{{ protoc_checksum }}"
+
+    - name: Extract
+      become_user: vagrant
+      ansible.builtin.unarchive:
+        src: /opt/protoc-{{ protoc_version }}-linux-x86_64.zip
+        dest: "/opt/protoc-{{ protoc_version }}"
+        remote_src: yes
+    tags: protobuf
+
+
+  roles:
+  - {role: "geerlingguy.docker", docker_users: ["vagrant"], tags: ["docker"]}
+  - {role: "gantsign.golang", tags: ["golang"]}
+

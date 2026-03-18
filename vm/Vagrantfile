@@ -1,0 +1,43 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+machine = {
+    :hostname => "netbird",
+    :memory => 8192,
+    :cpu => 4,
+    :box_name => "cloud-image/ubuntu-24.04",
+}
+
+vm_ssh_key_path = (ENV["OPENDUT_VM_SSH_KEY_PATH"] || "#{Dir.home}/.ssh/id_rsa.pub").to_s
+
+Vagrant.configure("2") do |config|
+
+    config.vm.box = machine[:box_name]
+    config.vm.hostname = machine[:hostname]
+
+    config.vm.provider "virtualbox" do |vb|
+        vb.name = machine[:hostname]
+        vb.cpus = machine[:cpu]
+        vb.memory = machine[:memory]
+    end
+
+    # default shared folder required by provisioner
+    config.vm.synced_folder ".", "/vagrant", disabled: false, SharedFoldersEnableSymlinksCreate: false
+
+    # add ssh key
+    if !File.file?(vm_ssh_key_path)
+        puts "No SSH key found."
+        puts "Run e.g. 'mkdir -p ~/.ssh; ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa' to generate one."
+    end
+    config.vm.provision "file", source: vm_ssh_key_path, destination: "/home/vagrant/.ssh/authorized_keys2"
+
+    # Run Ansible from the Vagrant VM
+    config.vm.provision "ansible_local" do |ansible|
+    ansible.playbook = "playbook.yml"
+    ansible.galaxy_role_file = "ansible-requirements.yml"
+    ansible.galaxy_roles_path = './local_roles/:./roles/'
+    ansible.galaxy_command = 'ansible-galaxy install --role-file=%{role_file} --roles-path=./roles'
+
+    end
+
+end

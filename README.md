@@ -5,6 +5,9 @@ Build NetBird **client** for multiple architectures.
 ## Release workflow
 
 * Update branch in [fork](https://github.com/eclipse-opendut/netbird-fork)
-  * Current branch name is `configure-mtu2` (this contains the revised commit after the latest rebase for v0.28.9)
-* Update `netbird_ref` in [workflow](.github/workflows/release.yml)
+* Update test and release [workflow](.github/workflows/release.yml)
+  * `netbird_ref`: commit hash in netbird fork repository
+  * `netbird_version` used for tag
+  * `GORELEASER_VERSION` used for goreleaser action
+  * Ensure actual commands in test and release workflow are up to date with the upstream repository
 * Commit & Push

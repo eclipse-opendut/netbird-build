@@ -1,0 +1,6 @@
+# ansible-galaxy list
+# ansible-galaxy install -r ansible-requirements.yml --roles-path roles
+
+- src: "geerlingguy.docker"
+- src: "gantsign.golang"
+

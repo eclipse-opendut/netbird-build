@@ -9,11 +9,13 @@ concurrency:
 
 env:
   netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "33554ade85cfdf3d80f0fa155b4f32d761f0d615"
+  netbird_ref: "5355884422cbedd56b538b8e80ff7e7b4ef1a78c"
   # netbird tag from the forked repository
-  netbird_version: "v0.65.3"  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
+  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
+  netbird_version: "v0.66.4"
+  # grep -E "^\s*GORELEASER" .github/workflows/release.yml
+  GORELEASER_VERSION: "v2.14.3"
 
-  GORELEASER_VER: "v2.3.2"
   # do not publish artifacts since this requires secrets of the respective targets
   GORELEASER_FLAGS: "--skip=docker --skip=publish"
 
@@ -70,7 +72,7 @@ jobs:
         run: git --no-pager diff --exit-code
 
       - name: Test
-        run: CGO_ENABLED=1 GOARCH=${{ matrix.arch }} CI=true go test -tags devcert -exec 'sudo' -timeout 10m -p 1 $(go list ./... | grep -v -e /management -e /signal -e /relay)
+        run: CGO_ENABLED=1 GOARCH=${{ matrix.arch }} CI=true go test -tags devcert -exec 'sudo' -timeout 10m -p 1 $(go list ./... | grep -v -e /management -e /signal -e /relay -e /proxy -e /combined)
 
   release:
     # compare with https://github.com/netbirdio/netbird/blob/3f4f825ec14c45dd149a743eb80e98e7bb5e9ec5/.github/workflows/golang-test-linux.yml
@@ -114,7 +116,7 @@ jobs:
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
         with:
-          version: ${{ env.GORELEASER_VER }}
+          version: ${{ env.GORELEASER_VERSION }}
           args: release --clean ${{ env.GORELEASER_FLAGS }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
