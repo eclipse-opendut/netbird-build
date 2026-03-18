@@ -32,14 +32,6 @@
       cache_valid_time: 3600
     # 'gccgo-aarch64-linux-gnu', 'gccgo-arm-linux-gnueabihf', 'gccgo-arm-linux-gnueabi'
 
-  - name: Include go binary installation directory in PATH
-    become: true
-    become_user: vagrant
-    ansible.builtin.lineinfile:
-      path: /home/vagrant/.bashrc
-      regexp: '^export PATH=~/go/bin/'
-      line: "export PATH=~/go/bin/:$PATH"
-
   - name: Protobuf compile
     block:
     - name: Create target directory
@@ -62,6 +54,14 @@
         dest: "/opt/protoc-{{ protoc_version }}"
         remote_src: yes
     tags: protobuf
+
+  - name: Include go binary installation directory in PATH
+    become: true
+    become_user: vagrant
+    ansible.builtin.lineinfile:
+      path: /home/vagrant/.bashrc
+      regexp: '^export PATH=~/go/bin/'
+      line: "export PATH=~/go/bin/:$PATH"
 
 
   roles:

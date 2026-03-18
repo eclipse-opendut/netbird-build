@@ -1,4 +1,4 @@
-name: Test Code Linux
+name: Test NetBird and create release
 
 on:
   push:
@@ -133,3 +133,4 @@ jobs:
         with:
           artifacts: "dist/netbird*.tar.gz,client/proto/daemon.proto"
           tag: "${{ env.netbird_version }}-${{ env.netbird_ref }}"
+          replacesArtifacts: true  # overwrite existing release
