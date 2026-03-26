@@ -26,8 +26,8 @@ jobs:
   build-cache:
     name: "Build Cache"
     runs-on: ubuntu-22.04
-    outputs:
-      management: ${{ steps.filter.outputs.management }}
+    #outputs:
+    #  management: ${{ steps.filter.outputs.management }}
     steps:
       - name: Checkout code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
@@ -35,12 +35,12 @@ jobs:
           repository: '${{ env.netbird_repository }}'
           ref: '${{ env.netbird_ref }}'
 
-      - uses: dorny/paths-filter@v3
-        id: filter
-        with:
-          filters: |
-            management:
-              - 'management/**'
+#      - uses: dorny/paths-filter@v3
+#        id: filter
+#        with:
+#          filters: |
+#            management:
+#              - 'management/**'
 
       - name: Install Go
         uses: actions/setup-go@v5
