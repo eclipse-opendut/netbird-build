@@ -30,7 +30,10 @@ jobs:
       management: ${{ steps.filter.outputs.management }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       - uses: dorny/paths-filter@v3
         id: filter
@@ -129,7 +132,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -174,7 +180,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -243,7 +252,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -293,7 +305,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -340,7 +355,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
+        with:
+          repository: '${{ env.netbird_repository }}'
+          ref: '${{ env.netbird_ref }}'
 
       - name: Install Go
         uses: actions/setup-go@v5
@@ -394,9 +412,9 @@ jobs:
           ref: '${{ env.netbird_ref }}'
 
       - name: Install Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
-          go-version: "${{ env.go_version }}"
+          go-version-file: "go.mod"
           cache: false
 
       - name: Cache Go modules
