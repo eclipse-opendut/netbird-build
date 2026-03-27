@@ -1,4 +1,6 @@
-## Integration test with OpenDuT
+# Integration test with OpenDuT
+
+## Test NetBird client release in OpenDuT
 
 * Update `Cargo.toml`
 ```shell
@@ -9,9 +11,18 @@ netbird.version = "0.66.4-5355884422cbedd56b538b8e80ff7e7b4ef1a78c"
 # and use the protobuf definition for the netbird client service daemon from here (possible separate location to be configured)
 netbird.protobuf = "https://github.com/eclipse-opendut/netbird-build/releases/download/v0.66.4-5355884422cbedd56b538b8e80ff7e7b4ef1a78c/daemon.proto"
 ```
-* Create release
+* Update `Cargo.toml` with sed
 ```shell
-cargo ci dist
+# omit "v" prefix
+export NETBIRD_VERSION=0.67.1-e6333229d8f37878c248906b9f11fd6ba3c29e11
+sed -i "s#netbird.repository = .*#netbird.repository = \"https://github.com/eclipse-opendut/netbird-build\"#" Cargo.toml
+sed -i "s#netbird.version = .*#netbird.version = \"$NETBIRD_VERSION\"#" Cargo.toml
+sed -i "s#netbird.protobuf = .*#netbird.protobuf = \"https://github.com/eclipse-opendut/netbird-build/releases/download/v$NETBIRD_VERSION/daemon.proto\"#" Cargo.toml
+```
+
+* Create release with updated NetBird client
+```shell
+cargo ci dist --release
 ```
 * Configure mTLS in testenv
 ```shell
@@ -35,4 +46,47 @@ curl --cert /provision/pki/deploy/edgar-leader.pem --key /provision/pki/deploy/e
 * Run EDGAR test cluster
 ```shell
 cargo theo testenv cluster start
+```
+
+## Manually test NetBird client release
+
+* Install opendut ca certificate
+```shell
+cp /provision/pki/opendut-ca.pem /usr/local/share/ca-certificates/opendut-ca.crt
+update-ca-certificates
+```
+
+* Start NetBird client
+```shell
+netbird service install
+netbird service start
+```
+* Create NetBird client profile
+```shell
+netbird profile add mTLS
+netbird profile list
+cat /var/lib/netbird/root/mTLS.json
+grep -i cert -A2 /var/lib/netbird/root/mTLS.json
+netbird profile select mTLS
+```
+
+* Update NetBird client certificate paths
+```shell
+apt install -y moreutils
+jq '.MgmtClientCert.CertPath = "/provision/pki/deploy/edgar-leader.pem"' /var/lib/netbird/root/mTLS.json | sponge /var/lib/netbird/root/mTLS.json
+jq '.MgmtClientCert.KeyPath = "/provision/pki/deploy/edgar-leader.key"' /var/lib/netbird/root/mTLS.json | sponge /var/lib/netbird/root/mTLS.json
+grep -i cert -A2 /var/lib/netbird/root/mTLS.json
+```
+* Cat certificate/key without new lines
+```shell
+cat /provision/pki/deploy/edgar-leader.pem | tr '\n' ' '
+cat /provision/pki/deploy/edgar-leader.key | tr '\n' ' '
+```
+* Restart NetBird client
+```
+netbird service restart
+tail -f /var/log/netbird/client.log
+```
+```shell
+netbird up --management-url https://netbird-api.opendut.local/api --mtu 1542 --setup-key <TBD>
 ```

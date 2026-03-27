@@ -1,13 +1,120 @@
 name: opendut-integration.yml
 on:
+  #push:
   workflow_run:
     workflows: ["Test NetBird and create release"]
     types:
       - completed
 
+env:
+  # download the following adapted NetBird release
+  # omit "v" prefix
+  netbird_combined_version: "0.67.1-8f67a91f04fa1d072e8cb741c84654e4c1499e55"
+  # use the following OpenDuT for integration tests
+  opendut_version_ref: "use-netbird-mtls-fork-425"
+
+defaults:
+  run:
+    shell: bash  # turns on pipefail in all run-blocks: https://github.com/actions/runner-images/issues/4459#issuecomment-1374859960
+
 jobs:
-  on-success:
+  opendut-integration:
+    name: "OpenDuT integration tests with NetBird"
     runs-on: ubuntu-latest
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    # allow creating a release in this repository
+    permissions:
+      contents: write
+
+    # TODO: make this job run only if the workflow run that triggered it succeeded
+    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - run: echo 'The NetBird release workflow passed'
+      - name: Checkout sources
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+        with:
+          repository: 'eclipse-opendut/opendut'
+          ref: '${{ env.opendut_version_ref }}'
+      - name: Rust setup
+        uses: ./.github/actions/rust-setup
+      - name: Install kernel modules required to run testenv (vcan, can-gw)
+        uses: ./.github/actions/install-kernel-modules
+
+      #############################################################################################################
+      # USE THE NEWLY BUILT NETBIRD VERSION
+      #############################################################################################################
+      - name: Update Cargo.toml with the new version of NetBird
+        run: |
+          export NETBIRD_VERSION=${{ env.netbird_combined_version }}
+          sed -i "s#netbird.repository = .*#netbird.repository = \"https://github.com/eclipse-opendut/netbird-build\"#" Cargo.toml
+          sed -i "s#netbird.version = .*#netbird.version = \"$NETBIRD_VERSION\"#" Cargo.toml
+          sed -i "s#netbird.protobuf = .*#netbird.protobuf = \"https://github.com/eclipse-opendut/netbird-build/releases/download/v$NETBIRD_VERSION/daemon.proto\"#" Cargo.toml
+          
+          cat Cargo.toml
+
+      - name: Build release of opendut
+        run: cargo ci distribution --release --target=x86_64-unknown-linux-gnu
+
+      #############################################################################################################
+      # Enable mTLS in the test environment by copying the appropriate docker-compose override files for both localenv and testenv
+      #############################################################################################################
+      - name: Configure mTLS for testenv
+        run: |
+          cp .ci/deploy/localenv/docker-compose.override.netbird-mtls.yml .ci/deploy/localenv/docker-compose.override.yml
+          cp .ci/deploy/testenv/edgar/docker-compose.override.mtls.yml .ci/deploy/testenv/edgar/docker-compose.override.yml
+
+      #############################################################################################################
+      # RUN TESTENV INTEGRATION TESTS
+      #############################################################################################################
+      - name: List files
+        run: |
+          find ./target/ci/distribution/x86_64-unknown-linux-gnu/
+          find . -name opendut-theo -type f -exec ls -la {} +
+          mkdir -p ./testenv-logs/theo/
+
+      - name: Start test environment
+        run: |
+          cargo theo testenv start --skip-firefox --skip-telemetry 2>&1 | tee ./testenv-logs/theo/testenv-start.log
+
+      - name: Start edgar cluster
+        run: |
+          cargo theo testenv cluster start 2>&1 | tee ./testenv-logs/theo/testenv-cluster-start.log
+
+      - name: "Create OpenDuT release with the new NetBird version"
+        uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd  # v1.21.0
+        with:
+          artifacts: "./target/ci/distribution/x86_64-unknown-linux-gnu/*.tar.gz"
+          tag: "v${{ env.netbird_combined_version }}"
+          replacesArtifacts: true  # overwrite existing release
+          allowUpdates: true
+
+      - name: Collect container logs
+        if: always()
+        run: |
+          chmod +x .ci/deploy/testenv/edgar/persist-edgar-logs.sh
+          .ci/deploy/testenv/edgar/persist-edgar-logs.sh ./testenv-logs/docker/ 2>&1 | tee ./testenv-logs/theo/persist-edgar-logs.log
+
+      - name: "Upload testenv logs"
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f  # v7.0.0
+        with:
+          name: "testenv-logs-${{ github.sha }}"
+          path: "./testenv-logs/"
+          if-no-files-found: error
+          retention-days: 7
+
+      - name: Stop test environment
+        if: always()
+        run: |
+          cargo theo testenv stop
+
+      - name: Destroy test environment
+        if: always()
+        run: |
+          echo "Show all containers"
+          docker ps --all
+          cargo theo testenv destroy || { echo Result $?; true; }
+          echo "Show all remaining containers"
+          docker ps --all
+          echo "Remove all exited containers forcefully"
+          docker rm --volumes --force $(docker ps -a -q -f status=exited) || true
+        continue-on-error: true
