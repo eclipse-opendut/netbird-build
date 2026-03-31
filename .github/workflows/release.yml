@@ -11,7 +11,7 @@ concurrency:
 
 env:
   netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "8f67a91f04fa1d072e8cb741c84654e4c1499e55"
+  netbird_ref: "5a437f4ec738c5cc95e9fd4b4f754cb6d674223c"
   # netbird tag from the forked repository
   # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
   netbird_version: "v0.67.1"

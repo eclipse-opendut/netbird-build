@@ -9,9 +9,9 @@ on:
 env:
   # download the following adapted NetBird release
   # omit "v" prefix
-  netbird_combined_version: "0.67.1-8f67a91f04fa1d072e8cb741c84654e4c1499e55"
+  netbird_combined_version: "0.67.1-5a437f4ec738c5cc95e9fd4b4f754cb6d674223c"
   # use the following OpenDuT for integration tests
-  opendut_version_ref: "use-netbird-mtls-fork-425"
+  opendut_version_ref: "66cba77b0a91123649d59a88660369129ad51ad0" # development branch
 
 defaults:
   run:
