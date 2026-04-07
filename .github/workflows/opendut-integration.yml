@@ -11,7 +11,7 @@ env:
   # omit "v" prefix
   netbird_combined_version: "0.67.1-5a437f4ec738c5cc95e9fd4b4f754cb6d674223c"
   # use the following OpenDuT for integration tests
-  opendut_version_ref: "66cba77b0a91123649d59a88660369129ad51ad0" # development branch
+  opendut_version_ref: "v0.10.0"
 
 defaults:
   run:
@@ -21,12 +21,11 @@ jobs:
   opendut-integration:
     name: "OpenDuT integration tests with NetBird"
     runs-on: ubuntu-latest
-    # allow creating a release in this repository
-    permissions:
-      contents: write
 
-    # TODO: make this job run only if the workflow run that triggered it succeeded
-    #if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    permissions:
+      contents: write # allow creating a release in this repository
+
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - run: echo 'The NetBird release workflow passed'
       - name: Checkout sources
@@ -52,7 +51,9 @@ jobs:
           cat Cargo.toml
 
       - name: Build release of opendut
-        run: cargo ci distribution --release --target=x86_64-unknown-linux-gnu
+        run: |
+          cargo ci distribution --release --target=x86_64-unknown-linux-gnu
+          cargo ci edgar distribution --release --target=aarch64-unknown-linux-gnu
 
       #############################################################################################################
       # Enable mTLS in the test environment by copying the appropriate docker-compose override files for both localenv and testenv
@@ -82,7 +83,7 @@ jobs:
       - name: "Create OpenDuT release with the new NetBird version"
         uses: ncipollo/release-action@339a81892b84b4eeb0f6e744e4574d79d0d9b8dd  # v1.21.0
         with:
-          artifacts: "./target/ci/distribution/x86_64-unknown-linux-gnu/*.tar.gz"
+          artifacts: "./target/ci/distribution/*/*.tar.gz"
           tag: "v${{ env.netbird_combined_version }}"
           replacesArtifacts: true  # overwrite existing release
           allowUpdates: true
@@ -92,6 +93,8 @@ jobs:
         run: |
           chmod +x .ci/deploy/testenv/edgar/persist-edgar-logs.sh
           .ci/deploy/testenv/edgar/persist-edgar-logs.sh ./testenv-logs/docker/ 2>&1 | tee ./testenv-logs/theo/persist-edgar-logs.log
+        # collecting logs is best-effort, we don't want to fail the workflow if it fails for some reason (e.g. if the script has a bug or if docker is not responsive), so we set continue-on-error to true
+        continue-on-error: true
 
       - name: "Upload testenv logs"
         if: always()
