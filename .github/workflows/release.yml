@@ -11,10 +11,10 @@ concurrency:
 
 env:
   netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "5a437f4ec738c5cc95e9fd4b4f754cb6d674223c"
+  netbird_ref: "3bc684582fdf496be88bc1df7e5ee7d5d953ef02"
   # netbird tag from the forked repository
   # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
-  netbird_version: "v0.67.1"
+  netbird_version: "v0.68.0"
   # grep -E "^\s*GORELEASER" .github/workflows/release.yml
   GORELEASER_VERSION: "v2.14.3"
 
