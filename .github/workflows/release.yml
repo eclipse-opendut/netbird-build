@@ -2,8 +2,8 @@ name: Test NetBird and create release
 
 on:
   push:
-  #  branches:
-  #    - main
+    branches:
+      - main
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}-${{ github.head_ref || github.actor_id }}
@@ -11,7 +11,7 @@ concurrency:
 
 env:
   netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "3bc684582fdf496be88bc1df7e5ee7d5d953ef02"
+  netbird_ref: "b190ea9e5f2453c2e7bd602e9f36e9d887bd3cfd"
   # netbird tag from the forked repository
   # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
   netbird_version: "v0.68.0"
