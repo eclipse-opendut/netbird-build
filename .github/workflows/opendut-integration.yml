@@ -9,7 +9,7 @@ on:
 env:
   # download the following adapted NetBird release
   # omit "v" prefix
-  netbird_combined_version: "0.68.0-f83abf87a3561c69f1695cee2689a4f6b88bcdbd"
+  netbird_combined_version: "0.68.1-5eb078283f2e9d06f48902d71ce7bcfe80c5804c"
   # use the following OpenDuT for integration tests
   opendut_version_ref: "v0.10.0"
 
