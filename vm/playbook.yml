@@ -63,11 +63,11 @@
   - name: Include go binary installation directory in PATH
     become: true
     become_user: vagrant
-    ansible.builtin.lineinfile:
+    blockinfile:
       path: /home/vagrant/.bashrc
-      regexp: '^export PATH=~/go/bin/'
-      line: "export PATH=~/go/bin/:$PATH"
-
+      block: |
+        export PATH=~/go/bin/:/opt/protoc-{{ protoc_version }}/bin/:$PATH
+      marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
   roles:
   - {role: "geerlingguy.docker", docker_users: ["vagrant"], tags: ["docker"]}
