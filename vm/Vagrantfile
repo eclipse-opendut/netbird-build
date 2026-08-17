@@ -44,6 +44,11 @@ Vagrant.configure("2") do |config|
     ansible.galaxy_role_file = "ansible-requirements.yml"
     ansible.galaxy_roles_path = './local_roles/:./roles/'
     ansible.galaxy_command = 'ansible-galaxy install --role-file=%{role_file} --roles-path=./roles'
+    ansible.playbook_command = "ANSIBLE_VERBOSITY=1 ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook"
+
+    if ENV["ANSIBLE_TAGS"] && !ENV["ANSIBLE_TAGS"].empty?
+      ansible.tags = ENV["ANSIBLE_TAGS"]
+    end
 
     end
 

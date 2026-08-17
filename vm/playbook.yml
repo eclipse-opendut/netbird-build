@@ -8,6 +8,7 @@
     golang_mirror: 'https://go.dev/dl'
     # use script in role directory to determine checksum if missing: https://github.com/gantsign/ansible-role-golang/blob/master/add_new_versions.py
     golang_redis_sha256sum: '9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b'
+    goreleaser_version: "v2.16.0"
 
     # Check in NetBird repository with the following command: 'grep -E '//\s+protoc\s+' client/proto/daemon.pb.go'
     # version scheme documented here: https://protobuf.dev/support/version-support
@@ -60,16 +61,39 @@
         remote_src: yes
     tags: protobuf
 
+  - name: Define path
+    ansible.builtin.set_fact:
+      vagrant_user_path: "~/go/bin/:/opt/protoc-{{ protoc_version }}/bin/:$PATH"
+    tags: goreleaser
+
   - name: Include go binary installation directory in PATH
     become: true
     become_user: vagrant
     blockinfile:
       path: /home/vagrant/.bashrc
       block: |
-        export PATH=~/go/bin/:/opt/protoc-{{ protoc_version }}/bin/:$PATH
+        export PATH={{ vagrant_user_path }}
       marker: "# {mark} ANSIBLE MANAGED BLOCK"
 
   roles:
   - {role: "geerlingguy.docker", docker_users: ["vagrant"], tags: ["docker"]}
   - {role: "gantsign.golang", tags: ["golang"]}
 
+
+  post_tasks:
+    - name: Check if goreleaser is already installed
+      become: true
+      become_user: vagrant
+      ansible.builtin.command: "goreleaser --version"
+      register: goreleaser_check
+      ignore_errors: true
+      environment:
+        PATH: "{{ vagrant_user_path }}"
+      tags: goreleaser
+
+    - name: Install goreleaser
+      become: true
+      become_user: vagrant
+      ansible.builtin.command: "go install github.com/goreleaser/goreleaser/v2@{{ goreleaser_version }}"
+      when: goreleaser_check.rc != 0 or goreleaser_check.stdout.find(goreleaser_version) == -1
+      tags: goreleaser
