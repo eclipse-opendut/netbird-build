@@ -40,11 +40,12 @@ See also [here](https://superuser.com/questions/247564/is-there-a-way-for-one-ss
     ```
 * Synchronize code to the VM.
     ```shell
-    rsync --delete -aP ../netbird/ vagrant@netbird:~/netbird/
+    rsync --delete -aP ../../netbird/ vagrant@netbird:~/netbird/
     ```
 
 * Alternative to use the port method and connect to localhost substitute the port number in the command below
     ```shell
     vagrant port
-    rsync --delete -aP -e 'ssh -p2200 -i ~/.ssh/id_rsa' ../netbird/ vagrant@localhost:~/netbird/
+    rsync --delete -aP -e 'ssh -p2200 -i ~/.ssh/id_rsa' ../../netbird/ vagrant@localhost:~/netbird/
     ```
+

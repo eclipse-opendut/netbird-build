@@ -6,13 +6,6 @@ on:
     types:
       - completed
 
-env:
-  # download the following adapted NetBird release
-  # omit "v" prefix
-  netbird_combined_version: "0.77.0-013ce410091f57eb94041e5e5769ea41ba45abfe"
-  # use the following OpenDuT for integration tests
-  opendut_version_ref: "v0.10.2"
-
 defaults:
   run:
     shell: bash  # turns on pipefail in all run-blocks: https://github.com/actions/runner-images/issues/4459#issuecomment-1374859960
@@ -27,6 +20,12 @@ jobs:
 
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
       - run: echo 'The NetBird release workflow passed'
       - name: Checkout sources
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
@@ -103,7 +102,7 @@ jobs:
           name: "testenv-logs-${{ github.sha }}"
           path: "./testenv-logs/"
           if-no-files-found: error
-          retention-days: 7
+          retention-days: 21
 
       - name: Stop test environment
         if: always()

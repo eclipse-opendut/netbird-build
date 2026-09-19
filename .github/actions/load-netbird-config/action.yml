@@ -1,0 +1,61 @@
+name: "Load NetBird config"
+description: >-
+  Reads the shared NetBird metadata from .github/netbird.env and exposes it
+  both as step outputs and as job-level environment variables, so all
+  workflows in this repository derive the repository/ref/version from one
+  source of truth.
+
+outputs:
+  netbird_repository:
+    description: "Fork repository that NetBird is built from"
+    value: ${{ steps.load.outputs.netbird_repository }}
+  netbird_ref:
+    description: "Commit ref of the fork to build"
+    value: ${{ steps.load.outputs.netbird_ref }}
+  netbird_version:
+    description: "Upstream NetBird version tag the ref is based on"
+    value: ${{ steps.load.outputs.netbird_version }}
+  netbird_goreleaser_version:
+    description: "goreleaser version used by the NetBird build"
+    value: ${{ steps.load.outputs.netbird_goreleaser_version }}
+  netbird_golang_version:
+    description: "Go toolchain version used to build and test NetBird"
+    value: ${{ steps.load.outputs.netbird_golang_version }}
+  netbird_combined_version:
+    description: "Version string combining netbird_version and netbird_ref"
+    value: ${{ steps.load.outputs.netbird_combined_version }}
+  opendut_version_ref:
+    description: "OpenDuT ref used for integration testing"
+    value: ${{ steps.load.outputs.opendut_version_ref }}
+
+runs:
+  using: "composite"
+  steps:
+    - id: load
+      shell: bash
+      run: |
+        set -a
+        . "${GITHUB_ACTION_PATH}/../../netbird.env"
+        set +a
+
+        combined_version="${NETBIRD_VERSION#v}-${NETBIRD_REF}"
+
+        {
+          echo "netbird_repository=${NETBIRD_REPOSITORY}"
+          echo "netbird_ref=${NETBIRD_REF}"
+          echo "netbird_version=${NETBIRD_VERSION}"
+          echo "netbird_goreleaser_version=${NETBIRD_GORELEASER_VERSION}"
+          echo "netbird_combined_version=${combined_version}"
+          echo "opendut_version_ref=${OPENDUT_VERSION_REF}"
+          echo "netbird_golang_version=${NETBIRD_GOLANG_VERSION}"
+        } >> "$GITHUB_OUTPUT"
+
+        {
+          echo "netbird_repository=${NETBIRD_REPOSITORY}"
+          echo "netbird_ref=${NETBIRD_REF}"
+          echo "netbird_version=${NETBIRD_VERSION}"
+          echo "netbird_goreleaser_version=${NETBIRD_GORELEASER_VERSION}"
+          echo "netbird_combined_version=${combined_version}"
+          echo "opendut_version_ref=${OPENDUT_VERSION_REF}"
+          echo "netbird_golang_version=${NETBIRD_GOLANG_VERSION}"
+        } >> "$GITHUB_ENV"

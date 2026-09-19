@@ -10,14 +10,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  netbird_repository: "eclipse-opendut/netbird-fork"
-  netbird_ref: "013ce410091f57eb94041e5e5769ea41ba45abfe"
-  # netbird tag from the forked repository
-  # git describe --tags | grep -Eo 'v[0-9]+.[0-9]+.[0-9]+'
-  netbird_version: "v0.77.0"
-  # grep -E "^\s*GORELEASER" .github/workflows/release.yml
-  netbird_goreleaser_version: "v2.16.0"
-
   # do not publish artifacts since this requires secrets of the respective targets
   GORELEASER_FLAGS: "--skip=docker --skip=publish"
 
@@ -31,7 +23,13 @@ jobs:
     #outputs:
     #  management: ${{ steps.filter.outputs.management }}
     steps:
-      - name: Checkout code
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
+      - name: Checkout NetBird code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           repository: '${{ env.netbird_repository }}'
@@ -68,7 +66,7 @@ jobs:
 
       - name: Install dependencies
         if: steps.cache.outputs.cache-hit != 'true'
-        run: sudo apt update && sudo apt install -y -q libgtk-3-dev libayatana-appindicator3-dev libgl1-mesa-dev xorg-dev gcc-multilib libpcap-dev
+        run: sudo apt update && sudo apt install -y -q libgtk-4-dev libwebkitgtk-6.0-dev libsoup-3.0-dev libgl1-mesa-dev xorg-dev gcc-multilib libpcap-dev
 
       - name: Install 32-bit libpcap
         if: steps.cache.outputs.cache-hit != 'true'
@@ -133,7 +131,13 @@ jobs:
         arch: [ '386','amd64' ]
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
+      - name: Checkout NetBird code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           repository: '${{ env.netbird_repository }}'
@@ -161,7 +165,7 @@ jobs:
             ${{ runner.os }}-gotest-cache-
 
       - name: Install dependencies
-        run: sudo apt update && sudo apt install -y -q libgtk-3-dev libayatana-appindicator3-dev libgl1-mesa-dev xorg-dev gcc-multilib libpcap-dev
+        run: sudo apt update && sudo apt install -y -q libgtk-4-dev libwebkitgtk-6.0-dev libsoup-3.0-dev libgl1-mesa-dev xorg-dev gcc-multilib libpcap-dev
 
       - name: Install 32-bit libpcap
         if: matrix.arch == '386'
@@ -174,14 +178,20 @@ jobs:
         run: git --no-pager diff --exit-code
 
       - name: Test
-        run: CGO_ENABLED=1 GOARCH=${{ matrix.arch }} CI=true go test -tags devcert -exec 'sudo' -timeout 10m -p 1 $(go list ./... | grep -v -e /management -e /signal -e /relay -e /proxy -e /combined)
+        run: CGO_ENABLED=1 GOARCH=${{ matrix.arch }} CI=true go test -coverprofile=coverage.txt -tags 'devcert privileged' -exec 'sudo --preserve-env=CI,CGO_ENABLED' -timeout 10m -p 1 $(go list -e ./... | grep -v -e /management -e /signal -e /relay -e /proxy -e /combined -e /client/ui -e /client/testutil/privileged)
 
   test_client_on_docker:
     name: "Client (Docker) / Unit"
     needs: [ build-cache ]
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
+      - name: Checkout NetBird code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           repository: '${{ env.netbird_repository }}'
@@ -233,11 +243,11 @@ jobs:
             -e GOCACHE=${CONTAINER_GOCACHE} \
             -e GOMODCACHE=${CONTAINER_GOMODCACHE} \
             -e CONTAINER=${CONTAINER} \
-            golang:1.25-alpine \
+            golang:${{ env.netbird_golang_version }}-alpine \
             sh -c ' \
               apk update; apk add --no-cache \
                 ca-certificates iptables ip6tables dbus dbus-dev libpcap-dev build-base; \
-              go test -buildvcs=false -tags devcert -v -timeout 10m -p 1 $(go list -buildvcs=false ./... | grep -v -e /management -e /signal -e /relay -e /proxy -e /combined -e /client/ui -e /upload-server)
+              go test -buildvcs=false -tags "devcert privileged" -v -timeout 10m -p 1 $(go list -e -buildvcs=false ./... | grep -v -e /management -e /signal -e /relay -e /proxy -e /combined -e /client/ui -e /upload-server -e /client/testutil/privileged)
             '
 
   test_relay:
@@ -253,7 +263,13 @@ jobs:
             raceFlag: "-race"
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
+      - name: Checkout NetBird code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           repository: '${{ env.netbird_repository }}'
@@ -294,7 +310,7 @@ jobs:
         run: |
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
           go test ${{ matrix.raceFlag }} \
-            -exec 'sudo' \
+            -exec 'sudo' -coverprofile=coverage.txt \
             -timeout 10m -p 1 ./relay/... ./shared/relay/...
 
   test_proxy:
@@ -306,7 +322,13 @@ jobs:
         arch: [ '386','amd64' ]
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
+      - name: Checkout NetBird code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           repository: '${{ env.netbird_repository }}'
@@ -345,7 +367,7 @@ jobs:
       - name: Test
         run: |
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
-          go test -timeout 10m -p 1 ./proxy/...
+          go test -timeout 10m -p 1 -coverprofile=coverage.txt ./proxy/...
 
   test_signal:
     name: "Signal / Unit"
@@ -356,7 +378,13 @@ jobs:
         arch: [ '386','amd64' ]
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout code
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
+      - name: Checkout NetBird code
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           repository: '${{ env.netbird_repository }}'
@@ -397,7 +425,7 @@ jobs:
         run: |
           CGO_ENABLED=1 GOARCH=${{ matrix.arch }} \
           go test \
-            -exec 'sudo' \
+            -exec 'sudo' -coverprofile=coverage.txt \
             -timeout 10m ./signal/... ./shared/signal/...
 
   release:
@@ -407,7 +435,13 @@ jobs:
     permissions:
       contents: write
     steps:
-      - name: Checkout sources
+      - name: Checkout workflow config
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
+
+      - name: Load shared NetBird config
+        uses: ./.github/actions/load-netbird-config
+
+      - name: Checkout NetBird sources
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
         with:
           repository: '${{ env.netbird_repository }}'

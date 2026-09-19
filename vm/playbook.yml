@@ -4,9 +4,11 @@
   hosts: all
   become: true
   vars:
-    golang_version: '1.25.5'  # compare with version NetBird repository: `grep -Eo "^go [0-9]+.[0-9]+.*" go.mod`
+    golang_version: '1.26.7'  # compare with version NetBird repository: `grep -Eo "^go [0-9]+.[0-9]+.*" go.mod`
     golang_mirror: 'https://go.dev/dl'
     # use script in role directory to determine checksum if missing: https://github.com/gantsign/ansible-role-golang/blob/master/add_new_versions.py
+    #   cd roles/gantsign.golang/
+    #   uv init; uv pip install packaging requests; uv run add_new_versions.py
     golang_redis_sha256sum: '9e9b755d63b36acf30c12a9a3fc379243714c1c6d3dd72861da637f336ebb35b'
     goreleaser_version: "v2.16.0"
 
