@@ -446,6 +446,7 @@ jobs:
         with:
           repository: '${{ env.netbird_repository }}'
           ref: '${{ env.netbird_ref }}'
+          fetch-depth: 0  # to generate the changelog from git history
 
       - name: Install Go
         uses: actions/setup-go@v5
