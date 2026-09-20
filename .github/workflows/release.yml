@@ -384,7 +384,7 @@ jobs:
       - name: Load shared NetBird config
         uses: ./.github/actions/load-netbird-config
 
-      - name: Checkout NetBird code
+      - name: Checkout NetBird code (replacing the previous checkout)
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd #v6.0.2
         with:
           repository: '${{ env.netbird_repository }}'
@@ -441,7 +441,7 @@ jobs:
       - name: Load shared NetBird config
         uses: ./.github/actions/load-netbird-config
 
-      - name: Checkout NetBird sources
+      - name: Checkout NetBird sources (replacing the previous checkout)
         uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 #v6.0.1
         with:
           repository: '${{ env.netbird_repository }}'
@@ -472,6 +472,9 @@ jobs:
       - name: Set custom git tag - the custom NetBird release version
         run: |
           git tag ${{ env.netbird_version }}-${{ env.netbird_ref }}
+
+      - name: Generate RPM changelog from git tags
+        run: bash release_files/rpm-changelog.sh
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v4
