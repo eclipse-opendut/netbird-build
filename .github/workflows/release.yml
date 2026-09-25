@@ -470,9 +470,12 @@ jobs:
       - name: Install OS build dependencies
         run: sudo apt update && sudo apt install -y -q gcc-arm-linux-gnueabihf gcc-aarch64-linux-gnu
 
-      - name: Set custom git tag - the custom NetBird release version
+      - name: Set custom git tags for release metadata and GoReleaser
         run: |
-          git tag ${{ env.netbird_version }}-${{ env.netbird_ref }}
+          # GoReleaser reads the canonical semver tag from the repository, while
+          # the suffixed tag below is only used for the GitHub release metadata.
+          git tag -f "${{ env.netbird_version }}"
+          git tag -f "${{ env.netbird_version }}-${{ env.netbird_ref }}"
 
       - name: Generate RPM changelog from git tags
         run: bash release_files/rpm-changelog.sh
